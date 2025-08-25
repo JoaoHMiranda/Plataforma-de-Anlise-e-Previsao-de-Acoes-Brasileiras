@@ -1,1 +1,1 @@
-# Plataforma-de-An-lise-e-Previs-o-de-A-es
+# Plataforma de Anlise e Previsao de Açoes Brasileiras

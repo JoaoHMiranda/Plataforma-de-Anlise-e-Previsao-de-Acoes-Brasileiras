@@ -1,116 +1,62 @@
-# Plataforma de Análise e Previsão de Ações
+# 🤖 Plataforma de Análise & Previsão de Ações (Streamlit)
 
-Aplicação web em **Streamlit** para:
+Aplicação para **análise exploratória**, **treino de modelos** (SVR/LSTM com vários otimizadores) e **previsão** de preços de ações — diretamente no navegador.
 
-* **Analisar** séries históricas de ações (candlestick, médias móveis, RSI, KPIs, etc.);
-* **Treinar modelos de IA** (☑️ **SVR** e ☑️ **LSTM**) com ou sem otimizadores (Bayes, Grid, Genético, PSO);
-* **Executar previsões** com modelos salvos e baixar os resultados.
-
-> ⚠️ **Uso exclusivamente educacional.** Os resultados são estimativas e **não constituem recomendação de investimento**.
+> **Aviso**: uso **exclusivamente educacional**. Os resultados são estimativas e **não constituem recomendação de investimento**.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Destaques
 
-* **Fontes de dados com fallback**: Yahoo → BRAPI → Stooq (ordem configurável).
-* **Indicadores**: MM20, MM50, RSI(14), retornos, volatilidade anualizada.
-* **Treino de modelos**
+* **Single file**: tudo no `app.py`. Modelos salvos em `./modelos/` e datasets em `./datasets/`.
+* **Coleta de dados com fallback**: Yahoo Finance → BRAPI → Stooq (ordem configurável, modo “insistente” opcional).
+* **Análise gráfica**:
 
-  * **SVR**: manual / Bayes / Grid / Genético / PSO.
-  * **LSTM**: manual / Bayes / Genético / PSO.
-  * **Barra de progresso** acompanha o treino em tempo real (via stdout + tempo).
-  * **GPU quando disponível**; se não houver, roda automaticamente em **CPU**.
-* **Persistência de modelos**
+  * Candlestick + MM20/MM50
+  * RSI(14), boxplot do fechamento, retornos e barras de volume anual
+  * KPIs (último preço, retorno 21d, vol anualizada \~21d, máx 52s)
+  * Download de um **.zip** com TXT (resumo), CSV e PNGs
+* **Treino de modelos**:
 
-  * Tudo salvo em `./modelos/` (nome: `<DisplayName>_<timestamp>.(keras|pkl|svr.pkl)`).
-  * **Imagens de treino não ficam salvas** — são exibidas na página e descartadas.
-* **Previsão**
+  * **SVR** (RBF) e **LSTM**
+  * Modos: **Manual**, **Bayes**, **Grid**, **Genético (GA)**, **PSO**
+  * A **UI muda automaticamente** conforme o modo (exibe apenas os parâmetros relevantes)
+  * Robustificação anti-erros de forma: criação de janelas, split time-series e **CV segura** (evita “folds > samples”)
+  * Fallback interno rápido (mini-grid SVR) em caso de falha
+* **Salvamento/gerenciamento de modelos**:
 
-  * Selecione qualquer modelo salvo, escolha horizonte e período, visualize e **baixe CSV**.
-* **Exportação**
+  * **SVR**: `*.svr.pkl` (inclui `SVR`, `MinMaxScaler` e metadados)
+  * **LSTM**: `*.keras` + `*.pkl` (escala + metadados)
+  * `*.meta.json` com descrição/ticker/período/lookback etc.
+* **Previsão**:
 
-  * Aba de análise permite baixar um `.zip` com **TXT de resumo**, **CSV** e **gráficos** do histórico.
-  * Aba de treino gera um `.zip` com **apenas os modelos** (sem imagens/TXT de treino).
-
----
-
-## 🗂️ Estrutura (resumo)
-
-```
-.
-├── app.py
-├── modelos/                 # pasta onde os modelos salvos são consolidados
-│   └── <Display>_<ts>.keras / .pkl / .svr.pkl / .meta.json
-├── datasets/                # CSVs temporários para scripts externos
-├── (opcional) scripts de otimização:
-│   ├── svr_bayes.py         ├── svr_grid.py
-│   ├── svr_genetico.py      ├── svr_pso.py
-│   ├── lstm_bayes.py        ├── lstm_genetico.py
-│   └── lstm_pso.py
-└── README.md
-```
-
-> Os scripts de otimização podem ficar em `./modelos` (padrão) ou em outra pasta que você apontar na interface.
+  * Carrega um modelo salvo e prevê *n* dias úteis
+  * Gráfico (histórico + previsão) e **download do CSV**
+* **GPU opcional**: se existir, usa com *memory growth*; caso contrário, força CPU silenciosa.
 
 ---
 
-## ⚙️ Requisitos
+## 📦 Instalação
 
-* **Python 3.10 – 3.12**
-* (Opcional) **GPU NVIDIA** com drivers/CUDA compatíveis se quiser acelerar LSTM.
-
----
-
-## 🚀 Instalação rápida
-
-### 1) Crie um ambiente virtual
-
-**Linux/macOS**
+Recomendado Python 3.10+.
 
 ```bash
+
+# Ambiente (opcional mas recomendado)
 python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# Dependências
+pip install -U pip
+pip install streamlit yfinance plotly scikit-learn pandas numpy matplotlib joblib requests tensorflow
+
+# Otimizadores (opcional, por modo)
+pip install scikit-optimize      # Bayes (SVR e LSTM)
+pip install geneticalgorithm     # Genético (SVR)
+pip install pyswarms             # PSO (SVR)
 ```
 
-**Windows (PowerShell)**
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-```
-
-### 2) Instale as dependências
-
-**Opção A – tudo via `pip` diretamente**
-
-```bash
-pip install streamlit plotly numpy pandas scikit-learn tensorflow yfinance requests joblib matplotlib scikit-optimize geneticalgorithm pyswarms
-```
-
-> 💡 **GPU (opcional)**: em muitas instalações recentes você pode usar
-> `pip install "tensorflow[and-cuda]"`
-> Caso não tenha GPU ou queira evitar CUDA, `pip install tensorflow` (CPU) já funciona.
-
-**Opção B – usando um `requirements.txt` (opcional)**
-Crie um arquivo `requirements.txt` com o conteúdo abaixo e rode `pip install -r requirements.txt`:
-
-```
-streamlit
-plotly
-numpy
-pandas
-scikit-learn
-tensorflow
-yfinance
-requests
-joblib
-matplotlib
-scikit-optimize
-geneticalgorithm
-pyswarms
-```
+> Dica: se preferir, crie um `requirements.txt` com as libs acima.
 
 ---
 
@@ -120,71 +66,119 @@ pyswarms
 streamlit run app.py
 ```
 
-* Acesse o link local exibido no terminal (ex.: `http://localhost:8501`).
-* Se houver GPU disponível, a aplicação tenta usá-la automaticamente; caso contrário, segue em CPU.
+Acesse o link que o Streamlit mostrar (geralmente `http://localhost:8501`).
 
 ---
 
-## 🧭 Como usar
+## 🧭 Guia rápido de uso
 
-1. **📊 Análise de Ações**
+### 1) Aba **📊 Análise de Ações**
 
-   * Digite o **ticker** (ex.: `PETR4.SA`), escolha o período e clique em **Analisar na Tela**.
-   * Veja candlestick, MMs, RSI, retornos e métricas.
-   * Baixe o pacote `.zip` (TXT + CSV + gráficos do **histórico**).
+* Informe **ticker** (ex.: `PETR4.SA`) e **período** (ex.: `5y`, `6mo`, `1y`…).
+* Escolha a **ordem das fontes** e, se quiser, ative o **modo insistente**.
+* Clique **Analisar na Tela**:
 
-2. **🔬 Treinar Modelos (SVR/LSTM)**
+  * KPIs, candlestick, MM20/MM50, RSI, boxplot, retornos e volume por ano.
+  * **Salvar (Downloads)**: gera `.zip` com resumo TXT, CSV e imagens PNG.
 
-   * Escolha **modelo** e **otimizador**.
-   * Para **manual**, ajuste hiperparâmetros e treine.
-   * Para **otimizadores externos** (Bayes, Grid, Genético, PSO), aponte a pasta onde estão os scripts
-     (`svr_bayes.py`, `lstm_pso.py`, etc.).
-   * Ao final, os modelos são **consolidados em `./modelos/`** com o nome que você definiu.
-   * As **imagens** aparecem no site e depois são **descartadas**; o ZIP de treino contém **apenas os modelos**.
+### 2) Aba **🔬 Treinar Modelos (SVR/LSTM)**
 
-3. **📈 Fazer Previsão**
+* Selecione **modelo** (SVR ou LSTM) e **modo** (Manual / Bayes / Grid / Genético / PSO).
+* A interface **adapta dinamicamente** os campos:
 
-   * Selecione um modelo salvo, defina o horizonte (dias úteis) e rode.
-   * Baixe o **CSV** com a curva prevista.
+  * **SVR Manual**: `look_back`, `C`, `gamma`, `epsilon`
+  * **SVR Bayes**: `look_back`, **Iterações (Bayes)** (min **10**), busca em (C, γ, ε)
+  * **SVR Grid**: listas de `C`, `gamma`, `epsilon` + `look_back`
+  * **SVR GA**: `População`, `Iterações`, `Prob. mutação/crossover`, `elit_ratio`, `parents_portion` + `look_back`
+  * **SVR PSO**: `Partículas`, `Iterações`, `c1`, `c2`, `w`, **bounds (C,γ,ε)** + `look_back`
+  * **LSTM Manual**: `look_back`, `units`, `dropout`, `recurrent_dropout`, `epochs`, `batch_size`
+  * **LSTM Bayes**: faixas de `units`, `dropout`, `epochs` + `n_calls` (min **10**) + `look_back`
+  * **LSTM GA (simplificado)**: `População`, `Gerações` + `look_back`
+  * **LSTM PSO (simplificado)**: `Tentativas` (busca aleatória guiada) + `look_back`
+* Clique **Treinar**:
 
----
+  * Exibe métrica (RMSE/MAE/R²), gráfico “Real vs Previsto” e, no caso de LSTM, curva de loss.
+  * Modelos salvos automaticamente em `./modelos/`.
+  * Botão **Salvar pacote do treino (apenas modelos)** gera `.zip` só com os artefatos de modelo.
 
-## 🧪 Otimizadores externos (extras)
+### 3) Aba **📈 Fazer Previsão**
 
-* **SVR**: `svr_bayes.py`, `svr_grid.py`, `svr_genetico.py`, `svr_pso.py`
-* **LSTM**: `lstm_bayes.py`, `lstm_genetico.py`, `lstm_pso.py`
-
-Dependências adicionais já estão na lista (✅ `scikit-optimize`, ✅ `geneticalgorithm`, ✅ `pyswarms`).
-Coloque os scripts em `./modelos` (padrão) **ou** ajuste o caminho na interface antes de treinar.
-
----
-
-## 🛟 Dicas & Solução de problemas
-
-* **Mensagens CUDA/cuDNN no terminal**
-  Se não houver GPU disponível, o TensorFlow roda **em CPU**. Essas mensagens podem ser ignoradas.
-* **Limites de API/Yahoo/BRAPI**
-  Se faltar dado, a aplicação tenta novas fontes e pode insistir automaticamente (opção “modo insistente”).
-* **Dependência faltando**
-  O app avisa qual pacote instalar (ex.: `pip install pyswarms`).
-* **Barra de progresso**
-  A barra vai do tempo estimado + “saltos” quando encontra mensagens do treino (`Treinando…`, `Avaliando…`, `finalizados`, etc.).
+* Selecione um modelo salvo.
+* Informe **ticker** (pode ser outro), **horizonte (dias úteis)** e **período** para carregar a série.
+* Clique **Rodar Previsão** para ver o gráfico e **baixar CSV** dos valores previstos.
 
 ---
 
-## 👤 Autor
+## 🔧 Detalhes técnicos & decisões
 
-**João Henrique Silva de Miranda**
-LinkedIn: [www.linkedin.com/in/joao-henrique-silva-de-miranda](https://www.linkedin.com/in/joao-henrique-silva-de-miranda)
+* **Criação de janelas**: séries “Close” normalizadas com `MinMaxScaler` e janelas `look_back`.
+* **Robustificação contra erros comuns**:
+
+  * Evita arrays 1D/vazios no split treino/teste.
+  * **TimeSeriesSplit** “seguro”: escolhe `n_splits` válido; se impraticável, cai para *hold-out*.
+  * Se a série for muito curta, gera **dados sintéticos suaves** para fins didáticos.
+* **Bayes (skopt)**:
+
+  * **SVR** usa `BayesSearchCV` (C, γ, ε).
+  * **LSTM** usa `gp_minimize` para `units`, `dropout`, `epochs`, `batch`.
+  * **n\_calls / Iterações ≥ 10** (UI e backend).
+* **PSO (pyswarms)** para **SVR**: partículas, iterações e hiperparâmetros clássicos (`c1`, `c2`, `w`), com **bounds** para (C, γ, ε).
+  **Obs.**: o campo `look_back` é explicitamente solicitado no PSO (fix para NameError).
+* **Genético (geneticalgorithm)** para **SVR**: busca real contínua em (C, γ, ε) com configuração de população, iterações, elitismo, etc.
+* **LSTM GA/PSO**: versões leves (heurísticas simplificadas) para manter tudo em um arquivo.
 
 ---
 
-## 🙏 Agradecimentos
+## 🗂 Estrutura gerada
 
-Projeto desenvolvido com apoio e financiamento do **Conselho Nacional de Desenvolvimento Científico e Tecnológico (CNPq)** e da **Pontifícia Universidade Católica de Goiás (PUC Goiás)**. Muito obrigado! 🎓
+```
+.
+├─ app.py                # único arquivo da aplicação
+├─ modelos/              # modelos salvos + metadados
+│  ├─ <nome>_YYYYmmdd-HHMMSS.svr.pkl
+│  ├─ <nome>_YYYYmmdd-HHMMSS.keras
+│  ├─ <nome>_YYYYmmdd-HHMMSS.pkl        # scaler + params (LSTM)
+│  └─ <nome>_YYYYmmdd-HHMMSS.meta.json  # informações do modelo
+└─ datasets/
+   └─ dados_<TICKER>_<PERIODO>_processado.csv
+```
 
 ---
 
-## 📜 Licença
+## 🔌 Fontes de dados e tickers
 
-Defina aqui a licença do projeto MIT.
+* **Yahoo Finance**, **BRAPI** e **Stooq** (com ordem configurável e modo insistente).
+* Para ações brasileiras, use sufixo `.SA` (ex.: `PETR4.SA`, `VALE3.SA`).
+
+---
+
+## 🧪 Solução de problemas
+
+* **“Expected 2D array, got 1D array instead: array=\[] …”**
+  Resolvido no código com criação de janelas, *reshape* e splits seguros. Se persistir, aumente o período ou `look_back` menor.
+* **“Cannot have number of folds=… greater than number of samples=…”**
+  O app reduz automaticamente os `n_splits` e, se necessário, cai para *hold-out*. Experimente ampliar o período.
+* **Sem dados do provedor**
+  Ative **modo insistente**, troque a **ordem das fontes** e verifique o **ticker**. Como demonstração, o app pode gerar série sintética.
+* **Limites de API (rate limit)**
+  Tente novamente após alguns minutos; a app já silencia logs e tem cache leve (TTL 900s para Yahoo).
+
+---
+
+## 🔐 Aviso legal
+
+Este projeto tem **finalidade acadêmica/educacional**.
+Nenhuma previsão deve ser entendida como orientação financeira.
+
+---
+
+## 🙌 Créditos
+
+Desenvolvido por **João Henrique Silva de Miranda**, com apoio do **CNPq** e da **PUC Goiás**.
+Links no rodapé do app (LinkedIn/GitHub).
+
+---
+
+### 📜 Licença
+
+Defina a licença do repositório MIT.

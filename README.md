@@ -1,4 +1,4 @@
-# Plataforma de Análise e Previsão de Ações (Streamlit)
+# Plataforma de Análise e Previsão de Ações
 
 Aplicação web em **Streamlit** para:
 

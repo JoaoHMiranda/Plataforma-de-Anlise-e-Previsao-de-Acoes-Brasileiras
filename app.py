@@ -1016,7 +1016,7 @@ with tab1:
 
 # =============================== TAB 2 ========================================
 with tab2:
-    st.header("Treinar modelos (SVR ou LSTM) com ou sem otimizador — direto neste arquivo")
+    st.header("Treinar modelos (SVR ou LSTM) com ou sem otimizador")
 
     cM1, cM2 = st.columns([1.2, 2.2])
     with cM1:

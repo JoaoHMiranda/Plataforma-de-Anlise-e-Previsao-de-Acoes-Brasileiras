@@ -1,4 +1,4 @@
-# 🤖 Plataforma de Análise & Previsão de Ações (Streamlit)
+# 🤖 Plataforma de Análise & Previsão de Ações
 
 Aplicação para **análise exploratória**, **treino de modelos** (SVR/LSTM com vários otimizadores) e **previsão** de preços de ações — diretamente no navegador.
 

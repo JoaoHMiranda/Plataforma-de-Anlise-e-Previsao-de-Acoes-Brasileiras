@@ -76,7 +76,7 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-st.title("🤖 Plataforma de Análise e Previsão de Ações")
+st.title("Plataforma de Análise e Previsão de Ações")
 
 # -----------------------------------------------------------------------------
 # CONSTS / DIRS
